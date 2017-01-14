@@ -235,12 +235,12 @@
 				TargetAttributes = {
 					DA0733671DAF84A100088DAF = {
 						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = X4NP494ZNW;
+						DevelopmentTeam = 54ZX7ER58Z;
 						ProvisioningStyle = Automatic;
 					};
 					DA07337D1DAF851400088DAF = {
 						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = X4NP494ZNW;
+						DevelopmentTeam = 54ZX7ER58Z;
 						LastSwiftMigration = 0800;
 						ProvisioningStyle = Automatic;
 					};
@@ -425,7 +425,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = X4NP494ZNW;
+				DEVELOPMENT_TEAM = 54ZX7ER58Z;
 				INFOPLIST_FILE = "Safari FIDO U2F/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.blahgeek.Safari-FIDO-U2F";
@@ -441,7 +441,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = X4NP494ZNW;
+				DEVELOPMENT_TEAM = 54ZX7ER58Z;
 				INFOPLIST_FILE = "Safari FIDO U2F/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.blahgeek.Safari-FIDO-U2F";
@@ -456,7 +456,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "Safari FIDO U2F Extension/Safari_FIDO_U2F_Extension.entitlements";
 				CODE_SIGN_IDENTITY = "Mac Developer";
-				DEVELOPMENT_TEAM = X4NP494ZNW;
+				DEVELOPMENT_TEAM = 54ZX7ER58Z;
 				HEADER_SEARCH_PATHS = "/usr/local/include/u2f-host";
 				INFOPLIST_FILE = "Safari FIDO U2F Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
@@ -480,7 +480,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "Safari FIDO U2F Extension/Safari_FIDO_U2F_Extension.entitlements";
 				CODE_SIGN_IDENTITY = "Mac Developer";
-				DEVELOPMENT_TEAM = X4NP494ZNW;
+				DEVELOPMENT_TEAM = 54ZX7ER58Z;
 				HEADER_SEARCH_PATHS = "/usr/local/include/u2f-host";
 				INFOPLIST_FILE = "Safari FIDO U2F Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
