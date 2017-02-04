@@ -3,17 +3,103 @@
 
   u2f._pending = null;
 
+
+
+  /**
+  Log to the console.
+  We prepend all messages with a tag.
+  */
+
+  u2f.log = function(message) {
+    console.log("U2F Safari: " + message)
+  }
+
+
+
   /**
   Dispatch an event to the extension.
   It will be forwarded by the event listener in bridge.js.
   */
 
   u2f.postToExtension = function(name, message) {
-    console.log("Posting");
-    console.log(name);
-    console.log(message);
     window.postMessage({ name: name, message: message }, window.location.origin);
   }
+
+
+
+  /**
+  Register a callback for later processing.
+  Returns true if all went well, false if there was already a callback pending.
+  */
+
+  u2f.registerCallback = function(type, callback, appId) {
+    u2f.log(type + " " + appId);
+    if (u2f._pending) {
+      u2f.log("Pending action exists, exiting.");
+      return false;
+    } else {
+      u2f._pending = {
+        type: type,
+        callback: callback,
+      };
+      return true;
+    }
+  }
+
+
+
+  /**
+  Call a previously registered callback.
+  Clears the callback down so that it won't get called again.
+  */
+
+  u2f.callCallback = function(info) {
+    var pending = u2f._pending;
+    if (pending) {
+      u2f._pending = null;
+      pending.callback(info);
+    }
+  }
+
+
+
+  /**
+  Report success via the previously registered callback.
+  */
+
+  u2f.reportSuccess = function(result) {
+    var info = {
+      version: "U2F_V2",
+      clientData: result.clientData
+    };
+
+    var type = u2f._pending.type;
+    if (type == "register") {
+      info.registrationData = result.registrationData;
+    } else if (type == "sign") {
+      info.keyHandle = result.keyHandle;
+      info.signatureData = result.signatureData;
+    }
+    u2f.callCallback(info);
+  }
+
+
+
+  /**
+  Report an error via the previously registred callback.
+  */
+
+  u2f.reportError = function(message) {
+    u2f.log("Error " + message);
+    info = { errorCode : 1 };
+    if (message) {
+      info.errorMessage = message;
+    }
+    u2f.callCallback(info);
+  }
+
+
+
 
   /**
   * Dispatches register requests to available U2F tokens. An array of sign
@@ -40,37 +126,32 @@
     var registerRequests = arguments[arguments_offset];
     var callback = arguments[arguments_offset + 2];
 
-    console.log("FIDO U2F Safari Extension: registering ", appId);
+    if (u2f.registerCallback("register", callback, appId)) {
 
-    if (u2f._pending) {
-      console.log("FIDO U2F Safari Extension: Pending action exists, exit");
-      return;
-    }
+      var challenge = null;
+      for (var i = 0 ; i < registerRequests.length ; i += 1) {
+        if (registerRequests[i].version == "U2F_V2") {
+          challenge = registerRequests[i].challenge;
+          if (!appId) {
+            appId = registerRequests[i].appId;
+          }
+          break;
+        }
+      }
 
-    var challenge = null;
-    for (var i = 0 ; i < registerRequests.length ; i += 1) {
-      if (registerRequests[i].version == "U2F_V2") {
-        challenge = registerRequests[i].challenge;
-        if (!appId)
-        appId = registerRequests[i].appId;
-        break;
+      if (challenge && appId) {
+        u2f.postToExtension("U2FRegister", {
+          appId: appId,
+          challenge: challenge
+        });
+      } else {
+        u2f.reportError()
       }
     }
-    if (!challenge || !appId) {
-      callback({errorCode: 1});
-      return;
-    }
 
-    u2f._pending = {
-      type: "register",
-      callback: callback
-    };
-
-    u2f.postToExtension("U2FRegister", {
-      appId: appId,
-      challenge: challenge
-    });
   };
+
+
 
   /**
   * Dispatches an array of sign requests to available U2F tokens.
@@ -98,86 +179,68 @@
     var registeredKeys = arguments[arguments_offset];
     var callback = arguments[arguments_offset + 1];
 
-    console.log("FIDO U2F Safari Extension: signing ", appId);
+    if (u2f.registerCallback("sign", callback, appId)) {
 
-    if (u2f._pending) {
-      console.log("FIDO U2F Safari Extension: Pending action exists, exit");
-      return;
-    }
-
-    var keyHandle = null;
-    for (var i = 0 ; i < registeredKeys.length ; i += 1) {
-      if (registeredKeys[i].version == "U2F_V2") {
-        keyHandle = registeredKeys[i].keyHandle;
-        if (!appId || !challenge) {
-          appId = registeredKeys[i].appId;
-          challenge = registeredKeys[i].challenge;
+      var keyHandle = null;
+      for (var i = 0 ; i < registeredKeys.length ; i += 1) {
+        if (registeredKeys[i].version == "U2F_V2") {
+          keyHandle = registeredKeys[i].keyHandle;
+          if (!appId || !challenge) {
+            appId = registeredKeys[i].appId;
+            challenge = registeredKeys[i].challenge;
+          }
+          break;
         }
-        break;
+      }
+
+      if (keyHandle && appId && challenge) {
+        u2f.postToExtension("U2FSign", {
+          appId: appId,
+          challenge: challenge,
+          keyHandle: keyHandle,
+        });
+      } else {
+        u2f.reportError();
       }
     }
-    if (!keyHandle || !appId || !challenge) {
-      callback({errorCode: 1});
-      return;
-    }
-
-    u2f._pending = {
-      type: "sign",
-      callback: callback,
-    };
-
-    u2f.postToExtension("U2FSign", {
-      appId: appId,
-      challenge: challenge,
-      keyHandle: keyHandle,
-    });
   };
+
+
+  /**
+  Listen for a response from the app extension.
+  Figure out whether it's an error or a success, and process it accordingly.
+  */
 
   window.addEventListener("message", function(e) {
     if (e.origin == window.location.origin) {
       if (e.data.name == "U2FResponse") {
-        data = e.data.message;
-
-        console.log("FIDO U2F Safari Extension: got response, error = ", data.error);
-
-        var pending = u2f._pending;
-        if (!pending)
-        return;
-        u2f._pending = null;
-
-        if (data.error && data.error != 0) {
-          pending.callback({
-            errorCode: 1,
-            errorMessage: data.error,
-          });
-          return;
-        }
-
-        var result = JSON.parse(data.result);
-        if (pending.type == "register") {
-          pending.callback({
-            version: "U2F_V2",
-            registrationData: result.registrationData,
-            clientData: result.clientData,
-          });
-        } else if (pending.type == "sign") {
-          pending.callback({
-            version: "U2F_V2",
-            keyHandle: result.keyHandle,
-            signatureData: result.signatureData,
-            clientData: result.clientData,
-          });
+        response = e.data.message;
+        error = response.error;
+        if (error && (error != 0)) {
+          u2f.reportError(error);
+        } else {
+          u2f.reportSuccess(JSON.parse(response.result));
         }
       }
     }
-
   });
 
-  if (window.u2f)
-  window.u2f = u2f;
+
+
+  /**
+  Attach the api object to the window.
+  We replace anything that's already there, and attempt to prevent
+  anything that comes after us from replacing our api.
+  */
+
+  if (window.u2f) {
+    window.u2f = u2f;
+  }
+
   Object.defineProperty(window, "u2f", {
     get: function() { return u2f; },
     set: undefined,  // prevent furthur change
   });
-  console.log("FIDO U2F Safari Extension: loaded");
+
+  u2f.log("loaded");
 })();
