@@ -64,6 +64,19 @@
 
 
   /**
+  Return the type of callback that's pending.
+  */
+
+  u2f.callbackType = function() {
+    var pending = u2f._pending;
+    if (pending) {
+      return pending.type;
+    }
+  }
+
+
+
+  /**
   Report success via the previously registered callback.
   */
 
@@ -73,14 +86,19 @@
       clientData: result.clientData
     };
 
-    var type = u2f._pending.type;
-    if (type == "register") {
-      info.registrationData = result.registrationData;
-    } else if (type == "sign") {
-      info.keyHandle = result.keyHandle;
-      info.signatureData = result.signatureData;
+    var type = u2f.callbackType()
+    if (type) {
+      if (type == "register") {
+        info.registrationData = result.registrationData;
+      } else if (type == "sign") {
+        info.keyHandle = result.keyHandle;
+        info.signatureData = result.signatureData;
+      }
+
+      u2f.callCallback(info);
+    } else {
+      u2f.log("attempting to report success when no callback was registered")
     }
-    u2f.callCallback(info);
   }
 
 
@@ -182,6 +200,7 @@
     if (u2f.registerCallback("sign", callback, appId)) {
 
       var keyHandle = null;
+
       for (var i = 0 ; i < registeredKeys.length ; i += 1) {
         if (registeredKeys[i].version == "U2F_V2") {
           keyHandle = registeredKeys[i].keyHandle;
