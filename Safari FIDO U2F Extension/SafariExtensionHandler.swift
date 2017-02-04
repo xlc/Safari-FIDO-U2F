@@ -35,7 +35,7 @@ class SafariExtensionHandler: SFSafariExtensionHandler {
         if let result = result {
             userinfo["result"] = result
         }
-        page.dispatchMessageToScript(withName: "response", userInfo: userinfo)
+        page.dispatchMessageToScript(withName: "U2FResponse", userInfo: userinfo)
     }
     
     override func messageReceived(withName messageName: String, from page: SFSafariPage, userInfo: [String : Any]?) {
@@ -52,7 +52,7 @@ class SafariExtensionHandler: SFSafariExtensionHandler {
             let challenge = userInfo?["challenge"] as? String
             let keyHandle = userInfo?["keyHandle"] as? String
             
-            guard appId != nil && challenge != nil && (messageName != "sign" || keyHandle != nil) else {
+            guard appId != nil && challenge != nil && (messageName != "U2FSign" || keyHandle != nil) else {
                 self._sendResponse(page: page, error: U2FError.badrequest(), result: nil)
                 return
             }
@@ -91,11 +91,11 @@ class SafariExtensionHandler: SFSafariExtensionHandler {
                 }
                 
                 var response: UnsafeMutablePointer<Int8>? = nil
-                if messageName == "register" {
+                if messageName == "U2FRegister" {
                     let chal_bytes = try JSONSerialization.data(withJSONObject: ["challenge": challenge!, "version": U2F_V2, "appId": appId!])
                     let chal = String.init(data: chal_bytes, encoding: .utf8)!
                     ret = u2fh_register(devs!, chal, origin, &response, U2FH_REQUEST_USER_PRESENCE)
-                } else if messageName == "sign" {
+                } else if messageName == "U2FSign" {
                     let chal_bytes = try JSONSerialization.data(withJSONObject: ["challenge": challenge!, "version": U2F_V2, "appId": appId!, "keyHandle": keyHandle!])
                     let chal = String.init(data: chal_bytes, encoding: .utf8)!
                     ret = u2fh_authenticate(devs!, chal, origin, &response, U2FH_REQUEST_USER_PRESENCE)
