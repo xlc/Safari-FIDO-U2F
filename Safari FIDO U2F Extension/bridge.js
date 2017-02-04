@@ -21,8 +21,6 @@ window.addEventListener("message", function(e) {
   if (e.origin == window.location.origin) {
     name = e.data.name
     if ((name == "U2FSign") || (name == "U2FRegister")) {
-      message = e.data.message;
-      message.source = e.source;
       safari.extension.dispatchMessage(name, e.data.message);
     }
   }
@@ -34,9 +32,6 @@ Repost them to the window, so that they can be picked up by the u2f.js script.
 */
 
 safari.self.addEventListener("message", function(e) {
-  console.log("Message from plugin:");
-  console.log(e.name);
-  console.log(e.message);
   window.postMessage({
     name: e.name,
     message: e.message,
