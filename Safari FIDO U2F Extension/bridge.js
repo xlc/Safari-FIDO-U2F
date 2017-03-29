@@ -2,7 +2,7 @@
 
 window.addEventListener("message", function(e) {
     if (e.origin == window.location.origin) {
-        if (e.data.includes("u2f_window2safari")) { // if the data includes our tag, it's safe to parse it as JSON
+        if (typeof e.data === 'string' && e.data.includes("u2f_window2safari")) { // if the data includes our tag, it's safe to parse it as JSON
             var data = JSON.parse(e.data);
             if (data._meta == "u2f_window2safari") {
                 safari.extension.dispatchMessage(data.name, data.message);

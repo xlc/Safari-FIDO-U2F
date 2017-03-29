@@ -133,6 +133,9 @@
         if (e.origin != window.location.origin)
             return;
 
+        if (typeof e.data !== 'string')
+            return;
+                            
         if (!e.data.includes("u2f_safari2window")) // if the data includes our tag, it's safe to parse it as JSON
             return;
 
